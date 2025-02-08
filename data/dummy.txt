@@ -1,0 +1,1 @@
+Está para asegurarnos de que se crea la carpeta "data"
