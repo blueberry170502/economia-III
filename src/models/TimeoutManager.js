@@ -4,24 +4,20 @@ const { EmbedBuilder } = require('discord.js');
 
 class TimeoutManager {
     constructor() {
-        // Cargar los timeouts desde el archivo
         this.timeouts = this.loadTimeouts();
     }
 
-    // Cargar los timeouts desde el archivo JSON
     loadTimeouts() {
-        if (fs.existsSync(TIMEOUT_FILE)) {
-            return JSON.parse(fs.readFileSync(TIMEOUT_FILE, 'utf8'));
+        if (!fs.existsSync(TIMEOUT_FILE)) {
+            fs.writeFileSync(TIMEOUT_FILE, JSON.stringify({}, null, 2)); 
         }
-        return {};  // Si el archivo no existe, devolvemos un objeto vacío
+        return JSON.parse(fs.readFileSync(TIMEOUT_FILE, 'utf8')); 
     }
 
-    // Guardar los timeouts en el archivo JSON
     saveTimeouts() {
         fs.writeFileSync(TIMEOUT_FILE, JSON.stringify(this.timeouts, null, 2));
     }
 
-    // Verificar si el usuario está dentro del timeout
     checkTimeout(message, actionType, timeout) {
         const lastActionTime = this.timeouts[message.author.id];
         const currentTime = Date.now();
@@ -38,9 +34,8 @@ class TimeoutManager {
             return false;
         }
 
-        // Actualizar el tiempo de la última acción
         this.timeouts[message.author.id] = currentTime;
-        this.saveTimeouts();  // Guardar los timeouts actualizados
+        this.saveTimeouts();  
 
         return true;
     }

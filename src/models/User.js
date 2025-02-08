@@ -12,11 +12,12 @@ class User {
     }
 
     loadData() {
-        if (fs.existsSync(DATA_FILE)) {
-            const economy = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-            return economy[this.id] || { wallet: 0, bank: 0 };
+        if (!fs.existsSync(DATA_FILE)) {
+            fs.writeFileSync(DATA_FILE, JSON.stringify({}));
         }
-        return { wallet: 0, bank: 0 };
+
+        const economy = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        return economy[this.id] || { wallet: 0, bank: 0 };
     }
 
     saveData() {
