@@ -44,7 +44,7 @@ Para que tu bot funcione, necesitas configurar tu token de Discord. Sigue estos 
 2. Crea un archivo llamado `.env`.
 3. Dentro de este archivo, agrega la siguiente línea:
    ```env
-   DISCORD_TOKEN=tu-token-de-bot-aqui
+   TOKEN_BOT=tu-token-de-bot-aqui
    ```
 
 ### 5. Personalizar el Bot (Opcional)
