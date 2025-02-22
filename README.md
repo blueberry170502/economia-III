@@ -51,7 +51,7 @@ Para que tu bot funcione, necesitas configurar tu token de Discord. Sigue estos 
 
 Si deseas personalizar el comportamiento del bot, puedes editar los archivos dentro de la carpeta `src`. Aquí puedes modificar cómo funcionan los comandos, los mensajes que se envían y ajustar otras configuraciones del bot.
 
-Revisa el código en el repositorio y adapta las funcionalidades según tus necesidades. Si no estás seguro de qué archivo editar, comienza con `src/index.js`, que es el archivo principal donde se configura la ejecución del bot.
+Revisa el código en el repositorio y adapta las funcionalidades según tus necesidades. Si no estás seguro de qué archivo editar, comienza con `src/main.js`, que es el archivo principal donde se configura la ejecución del bot.
 
 La personalización puede incluir la modificación de las respuestas, la creación de nuevos comandos, o incluso integrar nuevas funcionalidades.
 
