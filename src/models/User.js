@@ -1,80 +1,52 @@
 const fs = require('fs');
 const DATA_FILE = 'data/economy.json';
 const TimeoutManager = require('./TimeoutManager');
-const { EmbedBuilder } = require('discord.js');
+const DatabaseManager = require('./DatabaseManager');
+const { createEmbed, errorEmbed } = require('../utils/utils');
 
 const timeoutManager = new TimeoutManager();
 
 class User {
     constructor(id) {
         this.id = id;
-        this.data = this.loadData();
+        this.db = new DatabaseManager('data/economy.json');
+        this.data = this.db.getUserData(id);
     }
 
-    loadData() {
-        if (!fs.existsSync(DATA_FILE)) {
-            fs.writeFileSync(DATA_FILE, JSON.stringify({}));
-        }
-
-        const economy = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-        return economy[this.id] || { wallet: 0, bank: 0 };
+    save() {
+        this.db.data[this.id] = this.data;
+        this.db.saveData();
     }
 
-    saveData() {
-        let economy = {};
-        if (fs.existsSync(DATA_FILE)) {
-            economy = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-        }
-        economy[this.id] = this.data;
-        fs.writeFileSync(DATA_FILE, JSON.stringify(economy, null, 2));
-    }
-
-    checkTimeout(message, actionType, timeout) {
-        return timeoutManager.checkTimeout(message, actionType, timeout);
+    checkTimeout(userId, actionType, timeout, message) {
+        return timeoutManager.checkTimeout(userId, actionType, timeout, message);
     }
 
     work(message) {
-        if (!this.checkTimeout(message, 'trabajo', 15000)) return;
+        if (!this.checkTimeout(this.id, 'trabajo', 15000, message)) return;
 
         const earnings = Math.floor(Math.random() * 100) + 50;
         this.data.wallet += earnings;
-        this.saveData();
+        this.save();
 
-        const embed = new EmbedBuilder()
-            .setColor('#00ff00')  // Color verde
-            .setTitle('¡Trabajo completado!')
-            .setDescription(`${message.author.username} has trabajado y ganado 💵${earnings}.`)
-            .setThumbnail(message.author.displayAvatarURL()) 
-            .setFooter({ text: 'Economía III' })
-            .setTimestamp();
+        const embed = createEmbed('¡Trabajo completado!', `${message.author.username} ha trabajado y ganado 💵${earnings}.`);
+        embed.setThumbnail(message.author.displayAvatarURL());
 
         message.reply({ embeds: [embed] });
     }
 
     rob(message, args) {
-        if (!this.checkTimeout(message, 'robo', 30000)) return;
+        if (!this.checkTimeout(this.id, 'robo', 30000, message)) return;
         
         const targetUser = message.mentions.users.first();
         if (!targetUser || targetUser.id === this.id) {
-            const embed = new EmbedBuilder()
-                .setColor('#FF0000')  // Color rojo 
-                .setTitle('Error')
-                .setDescription('Debes mencionar a un usuario válido para robar.')
-                .setFooter({ text: 'Economía III' })
-                .setTimestamp();
-            return message.reply({ embeds: [embed] });
+            return message.reply({ embeds: [errorEmbed('Debes mencionar a un usuario válido para robar.')] });
         }
         
         let economy = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
         const targetData = economy[targetUser.id] || { wallet: 0, bank: 0 };
         if (targetData.wallet <= 0) {
-            const embed = new EmbedBuilder()
-                .setColor('#FF0000')  // Color rojo 
-                .setTitle('Error')
-                .setDescription('Este usuario no tiene dinero en la cartera.')
-                .setFooter({ text: 'Economía III' })
-                .setTimestamp();
-            return message.reply({ embeds: [embed] });
+            return message.reply({ embeds: [errorEmbed('Este usuario no tiene dinero en la cartera.')] });
         }
         
         const stealAmount = Math.floor(targetData.wallet * (Math.random() * 0.45 + 0.05));
@@ -85,86 +57,67 @@ class User {
         economy[this.id] = this.data;
         fs.writeFileSync(DATA_FILE, JSON.stringify(economy, null, 2));
         
-        const embed = new EmbedBuilder()
-            .setColor('#ffcc00')  // Color amarillo
-            .setTitle('¡Robo exitoso!')
-            .setDescription(`${message.author.username} ha robado 💵${stealAmount} de ${targetUser.username}.`)
-            .setThumbnail(message.author.displayAvatarURL())  
-            .setFooter({ text: 'Economía III' })
-            .setTimestamp();
+        const embed = createEmbed('¡Robo exitoso!', `${message.author.username} ha robado 💵${stealAmount} de ${targetUser.username}.`);
+        embed.setThumbnail(message.author.displayAvatarURL());
 
         message.reply({ embeds: [embed] });
     }
 
-    deposit(message, args) {
-        const amount = args[0] === 'all' ? this.data.wallet : parseInt(args[0], 10);
-        if (isNaN(amount) || amount <= 0 || amount > this.data.wallet) {
-            const embed = new EmbedBuilder()
-                .setColor('#FF0000')  // Color rojo para error
-                .setTitle('Error')
-                .setDescription('Cantidad inválida o insuficiente en la cartera.')
-                .setFooter({ text: 'Economía III' })
-                .setTimestamp();
-            return message.reply({ embeds: [embed] });
+    deposit(message, amount) {
+        if (!amount) {
+            return message.reply({ embeds: [errorEmbed("Debes especificar una cantidad o usar 'all'.")] });
         }
-
+    
+        if (amount.toLowerCase() === 'all') amount = this.data.wallet;
+        amount = parseInt(amount, 10);
+    
+        if (isNaN(amount) || amount <= 0 || amount > this.data.wallet) {
+            return message.reply({ embeds: [errorEmbed("Cantidad inválida o insuficiente en la cartera.")] });
+        }
+    
         this.data.wallet -= amount;
         this.data.bank += amount;
-        this.saveData();
-        
-        const embed = new EmbedBuilder()
-            .setColor('#0077ff')  // Color azul
-            .setTitle('Depósito realizado')
-            .setDescription(`${message.author.username} ha depositado 💵${amount} en el banco.`)
-            .setThumbnail(message.author.displayAvatarURL()) 
-            .setFooter({ text: 'Economía III' })
-            .setTimestamp();
+        this.save();
+    
+        const embed = createEmbed('Depósito realizado', `${message.author.username} ha depositado 💵${amount} en el banco.`);
+        embed.setThumbnail(message.author.displayAvatarURL());
 
         message.reply({ embeds: [embed] });
     }
+    
 
-    withdraw(message, args) {
-        const amount = args[0] === 'all' ? this.data.bank : parseInt(args[0], 10);
-        if (isNaN(amount) || amount <= 0 || amount > this.data.bank) {
-            const embed = new EmbedBuilder()
-                .setColor('#FF0000')  // Color rojo para error
-                .setTitle('Error')
-                .setDescription('Cantidad inválida o insuficiente en el banco.')
-                .setFooter({ text: 'Economía III' })
-                .setTimestamp();
-            return message.reply({ embeds: [embed] });
+    withdraw(message, amount) {
+        if (!amount) {
+            return message.reply({ embeds: [errorEmbed("Debes especificar una cantidad o usar 'all'.")] });
         }
-
+    
+        if (amount.toLowerCase() === 'all') amount = this.data.bank; // Asegurar comparación correcta
+        amount = parseInt(amount, 10);
+    
+        if (isNaN(amount) || amount <= 0 || amount > this.data.bank) {
+            return message.reply({ embeds: [errorEmbed("Cantidad inválida o insuficiente en el banco.")] });
+        }
+    
         this.data.bank -= amount;
         this.data.wallet += amount;
-        this.saveData();
-
-        const embed = new EmbedBuilder()
-            .setColor('#ff6600')  // Color naranja
-            .setTitle('Retiro realizado')
-            .setDescription(`${message.author.username} ha retirado 💵${amount} del banco.`)
-            .setThumbnail(message.author.displayAvatarURL())  
-            .setFooter({ text: 'Economía III' })
-            .setTimestamp();
+        this.save();
+    
+        const embed = createEmbed('Retiro realizado', `${message.author.username} ha retirado 💵${amount} del banco.`);
+        embed.setThumbnail(message.author.displayAvatarURL());
 
         message.reply({ embeds: [embed] });
     }
+    
 
     balance(message) {
         const user = message.author;
         const targetUser = message.mentions.users.first();
 
-        const embed = new EmbedBuilder()
-            .setColor('#00ff00')  // Color verde
-            .setTitle(`Balance de ${targetUser ? targetUser.username : user.username}`) 
-            .setThumbnail(targetUser ? targetUser.displayAvatarURL() : user.displayAvatarURL())
-            .addFields(
-                { name: '💰 Cartera', value: `$${this.data.wallet}`, inline: true },
-                { name: '🏦 Banco', value: `$${this.data.bank}`, inline: true },
-                { name: '💵 Total', value: `$${this.data.wallet + this.data.bank}`, inline: true }
-            )
-            .setFooter({ text: 'Economía III' })
-            .setTimestamp();  // Agregar un timestamp al embed
+        const embed = createEmbed(
+            `Balance de ${targetUser ? targetUser.username : user.username}`,
+            `💰 Cartera: $${this.data.wallet}\n\n🏦 Banco: $${this.data.bank}\n\n💵 Total: $${this.data.wallet + this.data.bank}`, '#0077ff'
+        );
+        embed.setThumbnail(targetUser ? targetUser.displayAvatarURL() : user.displayAvatarURL());
 
         message.reply({ embeds: [embed] });
     }
