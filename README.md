@@ -60,7 +60,7 @@ La personalización puede incluir la modificación de las respuestas, la creaci�
 Una vez todo esté configurado, puedes ejecutar el bot utilizando el siguiente comando en la terminal:
 
 ```bash
-node src/index.js
+node src/main.js
 ```
 
 O para ejecutar en caliente, puedes usar el siguiente comando en tu terminal:
