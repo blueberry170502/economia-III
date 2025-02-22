@@ -73,13 +73,13 @@ npm run dev
 
 - `!work` - Gana dinero trabajando. Este comando permite al usuario obtener una cantidad de dinero virtual. Se puede usar cada 15 segundos.
 - `!rob <@usuario>` - Roba a otro usuario. Permite intentar robar dinero de otro usuario del servidor. Se puede usar cada 30 segundos.
-- `!dep <monto / "all">` - Deposita dinero en tu banco. Puedes guardar dinero virtual de forma segura.
-- `!ret <monto / "all">` - Retira dinero de tu banco. Puedes retirar el dinero que has depositado previamente.
+- `!dep <cantidad / "all">` - Deposita dinero en tu banco. Puedes guardar dinero virtual de forma segura.
+- `!ret <cantidad / "all">` - Retira dinero de tu banco. Puedes retirar el dinero que has depositado previamente.
 - `!bal <@usuario?>` - Muestra tu saldo actual o el de otro jugador. Consulta la cantidad de dinero que tienes disponible.
 - `!shop` - Muestra la tienda con los objetos disponibles.
-- `!buy <id_item> <cantidad>` - Compra un objeto de la tienda. Puedes adquirir artículos en el juego utilizando tu dinero.
+- `!buy <itemID> <cantidad>` - Compra un objeto de la tienda. Puedes adquirir artículos en el juego utilizando tu dinero.
 - `!inv <@usuario?>` - Muestra tu inventario o el de otro jugador. Muestra todos los artículos que has adquirido.
-- `!sell <id_item> <cantidad>` - Vende objetos de tu inventario. Permite deshacerte de artículos que ya no necesites.
+- `!sell <itemID> <cantidad>` - Vende objetos de tu inventario. Permite deshacerte de artículos que ya no necesites.
 - `!coll` - Recoge las ganancias de todos tus objetos. Se puede usar cada día.
 - `!help` - Muestra la lista de comandos disponibles.
 
